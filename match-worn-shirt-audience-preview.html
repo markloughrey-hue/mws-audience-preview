@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Match Worn Shirt × CRED — Audience Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --paper: #ffffff;
+    --navy: #1B2A3A;
+    --ink: #15171a;
+    --ink-2: #2a2d31;
+    --muted: #6b6f76;
+    --faint: #9a9ea4;
+    --line: #e5e7eb;
+    --line-strong: #d1d5db;
+    --teal: #1FBE94;
+    --teal-dark: #18A07F;
+    --teal-soft: #E6F8F1;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    font-size: 13.5px;
+    padding: 24px 16px;
+  }
+
+  /* — print/export bar — */
+  .export-bar {
+    max-width: 1100px;
+    margin: 0 auto 16px;
+    display: flex; justify-content: flex-end;
+    gap: 8px;
+  }
+  .export-bar button {
+    background: var(--navy); color: #fff;
+    border: none; padding: 10px 16px;
+    border-radius: 4px; font-family: inherit;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .export-bar button:hover { background: #2a3a4c; }
+
+  /* — dashboard frame — */
+  .dashboard {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: var(--paper);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 10px 30px rgba(0,0,0,0.06);
+  }
+
+  /* — navy header — */
+  .dash-header {
+    background: var(--navy);
+    color: #fff;
+    padding: 14px 32px;
+    display: flex; align-items: baseline; justify-content: space-between;
+    font-size: 12.5px;
+  }
+  .dash-header b { font-weight: 700; font-size: 13.5px; letter-spacing: -0.01em; }
+  .dash-header span { color: #b8c2cc; }
+
+  /* — title block — */
+  .title-block { padding: 28px 32px 20px; }
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.018em;
+    line-height: 1.1;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+  h1 .x { color: var(--teal-dark); font-weight: 500; }
+  .subtitle {
+    color: var(--muted); font-size: 15px; font-weight: 500;
+    margin-bottom: 18px;
+  }
+  .meta {
+    display: flex; gap: 24px; flex-wrap: wrap;
+    font-size: 12px; color: var(--muted);
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+
+  /* — disclaimer banner — */
+  .disclaimer {
+    background: var(--teal-soft);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 14px 32px;
+    font-size: 12.5px;
+    color: var(--ink-2);
+    line-height: 1.55;
+  }
+  .disclaimer b { color: var(--teal-dark); font-weight: 700; }
+
+  /* — KPI strip — */
+  .kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    background: #fbfbfa;
+  }
+  .kpi {
+    padding: 22px 20px;
+    border-right: 1px solid var(--line);
+    text-align: left;
+  }
+  .kpi:last-child { border-right: none; }
+  .kpi-label {
+    font-size: 10.5px; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+  .kpi-num {
+    font-size: 26px; font-weight: 800;
+    color: var(--ink); letter-spacing: -0.025em;
+    line-height: 1; margin-bottom: 6px;
+  }
+  .kpi-num .unit { font-size: 16px; font-weight: 700; }
+  .kpi-num.teal { color: var(--teal-dark); }
+  .kpi-sub { font-size: 11px; color: var(--muted); line-height: 1.4; }
+
+  /* — grid — */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 16px;
+    padding: 16px;
+    background: var(--bg);
+  }
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 20px;
+    overflow: hidden;
+  }
+  .card.span-6 { grid-column: span 6; }
+  .card.span-7 { grid-column: span 7; }
+  .card.span-5 { grid-column: span 5; }
+  .card.span-8 { grid-column: span 8; }
+  .card.span-4 { grid-column: span 4; }
+  .card.span-12 { grid-column: span 12; }
+
+  .card-head { margin-bottom: 14px; }
+  .card-eyebrow {
+    font-size: 10.5px; font-weight: 600; color: var(--teal-dark);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    margin-bottom: 4px;
+  }
+  .card-title {
+    font-size: 16px; font-weight: 700; color: var(--ink);
+    letter-spacing: -0.005em; margin-bottom: 2px;
+  }
+  .card-sub { font-size: 12px; color: var(--muted); }
+
+  .chart-h { position: relative; height: 220px; }
+  .chart-h-tall { position: relative; height: 300px; }
+
+  /* — tables — */
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th {
+    text-align: left; font-weight: 600;
+    font-size: 10.5px; color: var(--muted);
+    letter-spacing: 0.05em; text-transform: uppercase;
+    padding: 8px 0 8px; border-bottom: 1px solid var(--line-strong);
+  }
+  td {
+    padding: 9px 0; border-bottom: 1px solid var(--line);
+    color: var(--ink-2);
+  }
+  tr:last-child td { border-bottom: none; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+  .num-bold { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink); }
+  .bar-cell { width: 28%; vertical-align: middle; }
+  .bar-track { height: 4px; background: var(--teal-soft); border-radius: 2px; overflow: hidden; }
+  .bar-fill { height: 100%; background: var(--teal); border-radius: 2px; }
+
+  /* — next steps card — */
+  .next-steps { counter-reset: step; list-style: none; }
+  .next-steps li {
+    padding: 10px 0 10px 32px;
+    position: relative;
+    border-bottom: 1px solid var(--line);
+    font-size: 12.5px; color: var(--ink-2); line-height: 1.5;
+  }
+  .next-steps li:last-child { border-bottom: none; }
+  .next-steps li::before {
+    counter-increment: step;
+    content: counter(step);
+    position: absolute; left: 0; top: 11px;
+    width: 20px; height: 20px;
+    background: var(--teal);
+    color: #fff;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700;
+  }
+  .next-steps strong { color: var(--ink); font-weight: 600; }
+
+  /* — footer — */
+  .dash-footer {
+    border-top: 1px solid var(--line);
+    padding: 14px 32px;
+    font-size: 11.5px; color: var(--muted);
+    display: flex; justify-content: space-between; align-items: center;
+    background: #fbfbfa;
+  }
+  .dash-footer b { color: var(--ink); font-weight: 700; }
+  .dash-footer a { color: var(--teal-dark); text-decoration: none; }
+
+  /* — responsive — */
+  @media (max-width: 900px) {
+    .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+    .kpi { border-bottom: 1px solid var(--line); }
+    .grid { grid-template-columns: repeat(6, 1fr); }
+    .card.span-7, .card.span-5, .card.span-8, .card.span-4 { grid-column: span 6; }
+    .card.span-6 { grid-column: span 6; }
+  }
+
+  /* — print — */
+  @media print {
+    body { background: #fff; padding: 0; }
+    .export-bar { display: none; }
+    .dashboard { box-shadow: none; border-radius: 0; max-width: none; }
+    .card { break-inside: avoid; box-shadow: none; }
+    .grid { gap: 12px; padding: 12px; }
+    @page { size: A4 portrait; margin: 8mm; }
+  }
+</style>
+</head>
+<body>
+
+<div class="export-bar">
+  <button onclick="window.print()">Save / share as PDF</button>
+</div>
+
+<div class="dashboard">
+
+  <!-- HEADER -->
+  <div class="dash-header">
+    <div><b>CRED</b> <span>The Predictive Intelligence Platform</span></div>
+    <span>Prepared for Match Worn Shirt · May 2026</span>
+  </div>
+
+  <!-- TITLE -->
+  <div class="title-block">
+    <h1>Match Worn Shirt <span class="x">×</span> CRED</h1>
+    <div class="subtitle">Audience Profile — view as dashboard or save as a PDF report</div>
+    <div class="meta">
+      <span><b>Prepared for</b> Naivasha · Match Worn Shirt</span>
+      <span><b>Format</b> Shareable as dashboard or PDF</span>
+      <span><b>Date</b> May 2026</span>
+    </div>
+  </div>
+
+  <!-- DISCLAIMER -->
+  <div class="disclaimer">
+    <b>Illustrative figures throughout.</b> The 500,000 user base, the two existing data points (favourite team, region), and the product tiers (flagship £1,000+ vs. entry £100–200) are taken from our call. All other figures — income distribution, employers, geography, sport affinity, brand overlap — are benchmarked placeholders, used to show the shape and structure of what the enriched output would deliver.
+  </div>
+
+  <!-- KPI STRIP -->
+  <div class="kpi-strip">
+    <div class="kpi">
+      <div class="kpi-label">Users enriched</div>
+      <div class="kpi-num">487<span class="unit">K</span></div>
+      <div class="kpi-sub">97% match across base</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Median income</div>
+      <div class="kpi-num">£78.5<span class="unit">K</span></div>
+      <div class="kpi-sub">UK median: £35K</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">£100K+ earners</div>
+      <div class="kpi-num teal">31<span class="unit">%</span></div>
+      <div class="kpi-sub">9× UK national avg (3.5%)</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Home owners</div>
+      <div class="kpi-num">67<span class="unit">%</span></div>
+      <div class="kpi-sub">Avg property £950K</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">F1 reach</div>
+      <div class="kpi-num">58<span class="unit">%</span></div>
+      <div class="kpi-sub">Cross-sport follower base</div>
+    </div>
+  </div>
+
+  <!-- GRID -->
+  <div class="grid">
+
+    <!-- Income distribution -->
+    <div class="card span-7">
+      <div class="card-head">
+        <div class="card-eyebrow">Income</div>
+        <div class="card-title">Household income distribution</div>
+        <div class="card-sub">% of enriched audience by bracket</div>
+      </div>
+      <div class="chart-h"><canvas id="incomeChart"></canvas></div>
+    </div>
+
+    <!-- Product tier -->
+    <div class="card span-5">
+      <div class="card-head">
+        <div class="card-eyebrow">Product</div>
+        <div class="card-title">Product-tier match</div>
+        <div class="card-sub">Audience size by recommended inventory tier</div>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Tier</th><th class="num">Users</th><th class="num">%</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Flagship £1K+</td><td class="num">58K</td><td class="num-bold">12%</td></tr>
+          <tr><td>Premium £500–1K</td><td class="num">93K</td><td class="num-bold">19%</td></tr>
+          <tr><td>Core £200–500</td><td class="num">152K</td><td class="num-bold">31%</td></tr>
+          <tr><td>Entry £100–200</td><td class="num">184K</td><td class="num-bold">38%</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Industry breakdown -->
+    <div class="card span-5">
+      <div class="card-head">
+        <div class="card-eyebrow">Employers</div>
+        <div class="card-title">Industry breakdown</div>
+        <div class="card-sub">Share of audience by primary industry</div>
+      </div>
+      <div class="chart-h"><canvas id="industryChart"></canvas></div>
+    </div>
+
+    <!-- Top employers -->
+    <div class="card span-7">
+      <div class="card-head">
+        <div class="card-eyebrow">Employers</div>
+        <div class="card-title">Top 10 employers</div>
+        <div class="card-sub">By verified user count in sample</div>
+      </div>
+      <table>
+        <tbody>
+          <tr><td>Goldman Sachs</td><td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div></td><td class="num-bold">2,410</td></tr>
+          <tr><td>JPMorgan Chase</td><td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width:87%"></div></div></td><td class="num-bold">2,090</td></tr>
+          <tr><td>McKinsey &amp; Co.</td><td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width:74%"></div></div></td><td class="num-bold">1,780</td></tr>
+          <tr><td>Google</td><td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width:68%"></div></div></td><td class="num-bold">1,640</td></tr>
+          <tr><td>Deloitte</td><td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width:62%"></div></div></td><td class="num-bold">1,490</td></tr>
+          <tr><td>Amazon</td><td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width:59%"></div></div></td><td class="num-bold">1,420</td></tr>
+          <tr><td>Citadel</td><td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width:50%"></div></div></td><td class="num-bold">1,200</td></tr>
+          <tr><td>BCG</td><td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width:46%"></div></div></td><td class="num-bold">1,100</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Age distribution -->
+    <div class="card span-7">
+      <div class="card-head">
+        <div class="card-eyebrow">Demographics</div>
+        <div class="card-title">Age distribution</div>
+        <div class="card-sub">Share of audience by age bracket — 60% sits in the 25–44 band</div>
+      </div>
+      <div class="chart-h"><canvas id="ageChart"></canvas></div>
+    </div>
+
+    <!-- Household composition -->
+    <div class="card span-5">
+      <div class="card-head">
+        <div class="card-eyebrow">Demographics</div>
+        <div class="card-title">Household composition</div>
+        <div class="card-sub">Life stage of the enriched audience</div>
+      </div>
+      <table>
+        <thead><tr><th>Segment</th><th class="num">Share</th></tr></thead>
+        <tbody>
+          <tr><td>Family with children at home</td><td class="num-bold">38%</td></tr>
+          <tr><td>Couple, no children</td><td class="num-bold">28%</td></tr>
+          <tr><td>Single, professional</td><td class="num-bold">24%</td></tr>
+          <tr><td>Empty nest</td><td class="num-bold">10%</td></tr>
+          <tr><td>Male / Female split</td><td class="num">78% / 22%</td></tr>
+          <tr><td>Postgraduate education</td><td class="num-bold">32%</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Geography -->
+    <div class="card span-12">
+      <div class="card-head">
+        <div class="card-eyebrow">Geography</div>
+        <div class="card-title">Top 10 cities by audience concentration</div>
+        <div class="card-sub">Median income and % £100K+ shown per city</div>
+      </div>
+      <table>
+        <thead>
+          <tr><th>City</th><th>Country</th><th class="num">Users</th><th class="num">Median income</th><th class="num">£100K+</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>London</td><td>UK</td><td class="num">87,400</td><td class="num">£94K</td><td class="num-bold">42%</td></tr>
+          <tr><td>New York</td><td>USA</td><td class="num">52,300</td><td class="num">$118K</td><td class="num-bold">48%</td></tr>
+          <tr><td>Singapore</td><td>SG</td><td class="num">34,200</td><td class="num">$92K</td><td class="num-bold">38%</td></tr>
+          <tr><td>Dubai</td><td>UAE</td><td class="num">28,100</td><td class="num">$110K</td><td class="num-bold">44%</td></tr>
+          <tr><td>Los Angeles</td><td>USA</td><td class="num">24,400</td><td class="num">$96K</td><td class="num-bold">36%</td></tr>
+          <tr><td>Hong Kong</td><td>HK</td><td class="num">19,200</td><td class="num">$104K</td><td class="num-bold">41%</td></tr>
+          <tr><td>Sydney</td><td>AU</td><td class="num">16,100</td><td class="num">A$112K</td><td class="num-bold">33%</td></tr>
+          <tr><td>Toronto</td><td>CA</td><td class="num">14,300</td><td class="num">C$96K</td><td class="num-bold">29%</td></tr>
+          <tr><td>Tokyo</td><td>JP</td><td class="num">12,400</td><td class="num">¥9.8M</td><td class="num-bold">31%</td></tr>
+          <tr><td>Frankfurt</td><td>DE</td><td class="num">10,900</td><td class="num">€88K</td><td class="num-bold">35%</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Sport affinity -->
+    <div class="card span-7">
+      <div class="card-head">
+        <div class="card-eyebrow">Cross-sport</div>
+        <div class="card-title">Sport affinity beyond football</div>
+        <div class="card-sub">% of audience that actively follows each property</div>
+      </div>
+      <div class="chart-h-tall"><canvas id="sportChart"></canvas></div>
+    </div>
+
+    <!-- Brand overlap -->
+    <div class="card span-5">
+      <div class="card-head">
+        <div class="card-eyebrow">Brand affinity</div>
+        <div class="card-title">Brand-category overlap</div>
+        <div class="card-sub">Indexed against UK averages</div>
+      </div>
+      <table>
+        <thead><tr><th>Category</th><th class="num">MWS</th><th class="num">UK</th></tr></thead>
+        <tbody>
+          <tr><td>Premium spirits</td><td class="num-bold">35%</td><td class="num">11%</td></tr>
+          <tr><td>Private banking</td><td class="num-bold">31%</td><td class="num">4%</td></tr>
+          <tr><td>Premium travel</td><td class="num-bold">27%</td><td class="num">9%</td></tr>
+          <tr><td>Premium automotive</td><td class="num-bold">23%</td><td class="num">5%</td></tr>
+          <tr><td>Premium watches</td><td class="num-bold">18%</td><td class="num">3%</td></tr>
+          <tr><td>Bespoke tailoring</td><td class="num-bold">12%</td><td class="num">2%</td></tr>
+          <tr><td>Yacht / private aviation</td><td class="num-bold">6%</td><td class="num">0.4%</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Next steps -->
+    <div class="card span-12">
+      <div class="card-head">
+        <div class="card-eyebrow">Next</div>
+        <div class="card-title">If this is interesting, here's how we'd take it forward</div>
+        <div class="card-sub">No timeline attached — picked up whenever Naivasha is back at work</div>
+      </div>
+      <ol class="next-steps">
+        <li><strong>Internal regroup.</strong> Naivasha to regroup with the Match Worn Shirt team on return from leave, and gauge whether there's interest in taking this further.</li>
+        <li><strong>Sample data shared.</strong> If of interest, the team shares a sample of user data with CRED (email, favourite team, region is sufficient).</li>
+        <li><strong>Populated report.</strong> CRED enriches the sample and pulls the output into a populated report — same shape as this preview, but with real Match Worn Shirt numbers — and shares it back for the team to review.</li>
+        <li><strong>Continue the conversation.</strong> If the populated report is interesting, we continue the conversation about scaling to the full 500K base.</li>
+      </ol>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="dash-footer">
+    <div><b>CRED</b> · The Predictive Intelligence Platform · SOC 2 + GDPR Compliant</div>
+    <div>Mark Loughrey · <a href="mailto:mark.loughrey@credinvestments.com">mark.loughrey@credinvestments.com</a></div>
+  </div>
+
+</div>
+
+<script>
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.color = '#6b6f76';
+Chart.defaults.borderColor = '#e5e7eb';
+
+const TEAL = '#1FBE94';
+const TEAL_DARK = '#18A07F';
+const TEAL_LIGHT = '#7FDDC0';
+const TEAL_PALE = '#C5EEDF';
+const NEUTRAL = '#d1d5db';
+
+new Chart(document.getElementById('incomeChart'), {
+  type: 'bar',
+  data: {
+    labels: ['<£50K', '£50–100K', '£100–200K', '£200–500K', '£500K+'],
+    datasets: [{
+      data: [38, 31, 19, 8, 4],
+      backgroundColor: [NEUTRAL, TEAL_PALE, TEAL_LIGHT, TEAL, TEAL_DARK],
+      borderRadius: 2, borderSkipped: false, categoryPercentage: 0.7,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.raw + '%' } } },
+    scales: {
+      x: { grid: { display: false }, border: { color: '#d1d5db' }, ticks: { font: { size: 11 } } },
+      y: { grid: { color: '#f3f4f6' }, border: { display: false }, ticks: { callback: v => v + '%', font: { size: 11 } }, max: 50 }
+    }
+  }
+});
+
+new Chart(document.getElementById('industryChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Financial', 'Tech', 'Consulting', 'Legal', 'Real Estate', 'Healthcare', 'Media', 'Other'],
+    datasets: [{
+      data: [31, 22, 14, 9, 7, 5, 4, 8],
+      backgroundColor: [TEAL_DARK, TEAL, TEAL_LIGHT, TEAL_PALE, TEAL_PALE, NEUTRAL, NEUTRAL, NEUTRAL],
+      borderRadius: 2, borderSkipped: false, categoryPercentage: 0.75,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.raw + '%' } } },
+    scales: {
+      x: { grid: { color: '#f3f4f6' }, border: { display: false }, ticks: { callback: v => v + '%', font: { size: 11 } } },
+      y: { grid: { display: false }, border: { color: '#d1d5db' }, ticks: { font: { size: 11 } } }
+    }
+  }
+});
+
+new Chart(document.getElementById('ageChart'), {
+  type: 'bar',
+  data: {
+    labels: ['18–24', '25–34', '35–44', '45–54', '55–64', '65+'],
+    datasets: [{
+      data: [8, 28, 32, 19, 9, 4],
+      backgroundColor: [TEAL_PALE, TEAL, TEAL_DARK, TEAL, TEAL_PALE, NEUTRAL],
+      borderRadius: 2, borderSkipped: false, categoryPercentage: 0.7,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.raw + '%' } } },
+    scales: {
+      x: { grid: { display: false }, border: { color: '#d1d5db' }, ticks: { font: { size: 11 } } },
+      y: { grid: { color: '#f3f4f6' }, border: { display: false }, ticks: { callback: v => v + '%', font: { size: 11 } }, max: 40 }
+    }
+  }
+});
+
+new Chart(document.getElementById('sportChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Premier League', 'Champions Lge', 'Formula 1', 'Tennis', 'Golf', 'Rugby', 'NFL', 'NBA', 'Cricket', 'MLB'],
+    datasets: [{
+      data: [92, 71, 58, 46, 38, 28, 24, 19, 15, 9],
+      backgroundColor: ctx => {
+        const v = ctx.raw;
+        if (v > 60) return TEAL_DARK;
+        if (v > 40) return TEAL;
+        if (v > 20) return TEAL_LIGHT;
+        return TEAL_PALE;
+      },
+      borderRadius: 2, borderSkipped: false, categoryPercentage: 0.78,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.raw + '%' } } },
+    scales: {
+      x: { grid: { color: '#f3f4f6' }, border: { display: false }, ticks: { callback: v => v + '%', font: { size: 11 } } },
+      y: { grid: { display: false }, border: { color: '#d1d5db' }, ticks: { font: { size: 10.5 } } }
+    }
+  }
+});
+</script>
+
+</body>
+</html>
